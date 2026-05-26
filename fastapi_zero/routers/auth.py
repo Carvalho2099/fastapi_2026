@@ -14,6 +14,8 @@ from fastapi_zero.security import (
     verify_password,
     create_access_token,
 )
+from sqlalchemy.ext.asyncio import AsyncSession as Session
+
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 Session = Annotated[Session, Depends(get_session)]
@@ -21,11 +23,13 @@ Oauth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 @router.post('/token', response_model=Token)
-def login_for_access_token(
+async def login_for_access_token(
     form_data: Oauth2Form,
     session: Session,
 ):
-    user = session.scalar(select(User).where(User.email == form_data.username))
+    user = await session.scalar(
+        select(User).where(User.email == form_data.username)
+    )
 
     if not user:
         raise HTTPException(

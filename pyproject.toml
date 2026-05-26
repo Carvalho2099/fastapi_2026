@@ -9,12 +9,13 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard] (>=0.136.1,<0.137.0)",
-    "sqlalchemy (>=2.0.49,<3.0.0)",
+    "sqlalchemy[asyncio] (>=2.0.50,<3.0.0)",
     "pydantic-settings (>=2.14.1,<3.0.0)",
     "alembic (>=1.18.4,<2.0.0)",
     "pwdlib[argon2] (>=0.3.0,<0.4.0)",
     "pyjwt (>=2.13.0,<3.0.0)",
-    "tzdata (>=2026.2,<2027.0)"
+    "tzdata (>=2026.2,<2027.0)",
+    "aiosqlite (>=0.22.1,<0.23.0)"
 ]
 
 
@@ -27,6 +28,7 @@ ruff = "^0.15.13"
 pytest = "^9.0.3"
 pytest-cov = "^7.1.0"
 taskipy = {version = "^1.14.1", python = ">=3.13,<4.0"}
+pytest-asyncio = "^1.4.0"
 
 [tool.ruff]
 line-length = 79
@@ -43,9 +45,13 @@ quote-style = 'single'
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = '-p no:warnings'
+asyncio_default_fixture_loop_scope = 'function'
 
 [tool.taskipy.tasks]
 lint = 'ruff check'
 format = 'ruff format'
 run = 'fastapi dev fastapi_zero/app.py'
 test = 'pytest -s -x --cov=fastapi_zero -vv'
+
+[tool.coverage.run]
+concurrency = ["thread", "greenlet"]

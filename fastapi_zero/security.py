@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from jwt import encode
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession as Session
 from fastapi import Depends, HTTPException
 from jwt import decode, DecodeError
 from http import HTTPStatus
@@ -42,7 +42,7 @@ def verify_password(plain_password: str, hashed_passord: str):
     return pdw_context.verify(plain_password, hashed_passord)
 
 
-def get_current_user(
+async def get_current_user(
     session: Session = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ):
@@ -53,14 +53,18 @@ def get_current_user(
     )
 
     try:
-        payload = decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
         subject_email = payload.get('sub')
         if not subject_email:
             raise credentials_exception
     except DecodeError:
         raise credentials_exception
 
-    user = session.scalar(select(User).where(User.email == subject_email))
+    user = await session.scalar(
+        select(User).where(User.email == subject_email)
+    )
     if not user:
         raise credentials_exception
 
