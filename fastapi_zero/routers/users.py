@@ -77,6 +77,12 @@ async def update_user(
     session: Session,
     current_user: CurrentUser,
 ):
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Not enough permissions',
+        )
+
     user_db = await session.scalar(select(User).where(User.id == user_id))
     if not user_db:
         raise HTTPException(
@@ -107,6 +113,12 @@ async def delete_user(
     session: Session,
     current_user: CurrentUser,
 ):
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Not enough permissions',
+        )
+
     user_db = await session.scalar(select(User).where(User.id == user_id))
     if not user_db:
         raise HTTPException(

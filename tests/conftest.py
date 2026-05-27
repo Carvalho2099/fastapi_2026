@@ -1,4 +1,5 @@
 import pytest
+import factory
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import (
     create_async_engine as create_engine,
@@ -68,11 +69,20 @@ def mock_db_time():
 async def user(session: Session):
     password = 'secret'
 
-    user = User(
-        username='Test',
-        email='test@test.com',
-        password=get_password_hash(password),
-    )
+    user = UserFactory(password=get_password_hash(password))
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    user.clean_password = password
+    return user
+
+
+@pytest_asyncio.fixture
+async def other_user(session: Session):
+    password = 'secret'
+
+    user = UserFactory(password=get_password_hash(password))
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -88,3 +98,12 @@ def token(client, user):
         data={'username': user.email, 'password': user.clean_password},
     )
     return response.json()['access_token']
+
+
+class UserFactory(factory.Factory):
+    class Meta:
+        model = User
+
+    username = factory.Sequence(lambda n: f'user{n}')
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
+    password = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')

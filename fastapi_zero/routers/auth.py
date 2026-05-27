@@ -13,6 +13,7 @@ from fastapi_zero.database import get_session
 from fastapi_zero.security import (
     verify_password,
     create_access_token,
+    get_current_user,
 )
 from sqlalchemy.ext.asyncio import AsyncSession as Session
 
@@ -45,3 +46,10 @@ async def login_for_access_token(
 
     access_token = create_access_token(data={'sub': user.email})
     return {'access_token': access_token, 'token_type': 'bearer'}
+
+
+@router.post('/refresh_token', response_model=Token)
+async def refresh_access_token(user: User = Depends(get_current_user)):
+    new_access_token = create_access_token(data={'sub': user.email})
+
+    return {'access_token': new_access_token, 'token_type': 'bearer'}

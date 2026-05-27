@@ -5,7 +5,7 @@ from jwt import encode
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession as Session
 from fastapi import Depends, HTTPException
-from jwt import decode, DecodeError
+from jwt import decode, DecodeError, ExpiredSignatureError
 from http import HTTPStatus
 from sqlalchemy import select
 
@@ -60,6 +60,8 @@ async def get_current_user(
         if not subject_email:
             raise credentials_exception
     except DecodeError:
+        raise credentials_exception
+    except ExpiredSignatureError:
         raise credentials_exception
 
     user = await session.scalar(
