@@ -1,8 +1,17 @@
 from datetime import datetime
-from sqlalchemy import func
-from sqlalchemy.orm import Mapped, registry, mapped_column
+from sqlalchemy import ForeignKey, func
+from enum import Enum
+from sqlalchemy.orm import Mapped, registry, mapped_column, relationship
 
 table_registry = registry()
+
+
+class TodoState(str, Enum):
+    draft = 'draft'
+    todo = 'todo'
+    doing = 'doing'
+    done = 'done'
+    trash = 'trash'
 
 
 @table_registry.mapped_as_dataclass
@@ -17,3 +26,21 @@ class User:
         init=False, server_default=func.now()
     )
     update_at: Mapped[datetime] = mapped_column(init=False, nullable=True)
+
+    todos: Mapped[list['Todo']] = relationship(
+        init=False,
+        cascade='all, delete-orphan',
+        lazy='selectin',
+    )
+
+
+@table_registry.mapped_as_dataclass
+class Todo:
+    __tablename__ = 'todos'
+
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    title: Mapped[str]
+    description: Mapped[str]
+    state: Mapped[TodoState]
+
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
